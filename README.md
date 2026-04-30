@@ -1,37 +1,36 @@
 # InvoiceGenie
 
-> توليد فواتير ZATCA-compliant تلقائياً من نص أو رسالة صوتية
+> فواتير ضريبية مبسطة متوافقة مع ZATCA للمقاولين والفريلانسرز في السعودية
 
 InvoiceGenie lets small contractors, freelancers, and sole proprietors in
-Saudi Arabia generate **ZATCA Phase 1 simplified tax invoices** by typing or
-speaking a single Arabic sentence:
-
-> "فاتورة لأحمد 500 ريال مقابل دهان"
-
-…and getting a print-ready invoice with a valid TLV/Base64 QR code.
+Saudi Arabia issue **ZATCA Phase 1 simplified tax invoices** from a simple
+Arabic form — with a print-ready A4 layout and a valid TLV/Base64 QR code.
 
 ## How it works
 
-1. User writes or records an Arabic sentence in `/new`.
-2. Voice → **OpenAI Whisper** (`whisper-1`, `language: "ar"`) → transcript.
-3. Transcript → **Claude Sonnet 4.6** with a cached system prompt and a
-   `create_invoice` tool definition → structured JSON
-   (`customer_name`, `line_items[]`).
-4. Totals + VAT (15%) are computed server-side.
+1. User signs in via a Supabase magic link at `/login`.
+2. User sets up their business profile at `/settings` (Arabic name + 15-digit
+   VAT number).
+3. User creates an invoice at `/new` — customer name, line items, quantities,
+   and VAT-exclusive unit prices. VAT (15%) is computed automatically.
+4. On submit, totals are validated server-side by `lib/zatca/validate.ts`.
 5. A ZATCA-compliant **TLV Base64** payload is built from
    `lib/zatca/tlv.ts` (5 tags: seller name, VAT number, timestamp, total with
    VAT, VAT amount) and rendered as a QR code via `qrcode`.
-6. Invoice is persisted to Supabase with row-level security.
-7. Detail page renders a print-friendly A4 layout with native Arabic RTL
-   shaping — click **تحميل / طباعة PDF** to save as PDF via the browser.
+6. Invoice is persisted to Supabase with row-level security (each user sees
+   only their own invoices).
+7. The detail page at `/invoices/[id]` renders a print-friendly A4 layout
+   with native Arabic RTL shaping — click **تحميل / طباعة PDF** to save as
+   PDF via the browser.
+
+A public demo at `/demo` lets anyone try the QR generation without signing
+in — the form runs entirely in the browser and persists nothing.
 
 ## Stack
 
-- Next.js 15 (App Router) + React 19 + TypeScript
+- Next.js 16 (App Router) + React 19 + TypeScript
 - TailwindCSS for styling
 - Supabase (Postgres + Auth magic link + RLS)
-- `@anthropic-ai/sdk` — Claude parser with **prompt caching** + tool use
-- `openai` — Whisper transcription
 - `qrcode` — QR image rendering
 - `zod` — runtime validation at API boundaries
 - `vitest` — unit tests for the ZATCA encoder
@@ -40,12 +39,11 @@ speaking a single Arabic sentence:
 
 ```bash
 # 1. Install
-pnpm install     # or npm install
+pnpm install
 
 # 2. Set env
 cp .env.example .env.local
-# Fill in NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
-#        SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY
+# Fill in NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 # 3. Run Supabase migrations
 supabase db reset   # applies supabase/migrations/0001_init.sql
@@ -82,55 +80,44 @@ asserts:
    link.
 2. Visit `/settings` and fill in a business:
    - اسم المنشأة: `شركة التجربة`
-   - Rقم ضريبي: `310122393500003`
-3. Visit `/new`, type:
-   > فاتورة لأحمد ٥٠٠ ريال مقابل دهان
+   - الرقم الضريبي: `310122393500003`
+3. Visit `/new` and fill in:
+   - اسم العميل: `أحمد`
+   - بند: وصف `دهان`، كمية `1`، السعر قبل الضريبة `434.78`
 4. Click **إنشاء الفاتورة**. Expected:
-   - `/api/parse` returns
-     `{ customer_name: "أحمد", line_items: [{ description: "دهان",
-     unit_price: 434.78, qty: 1, vat_rate: 0.15 }] }`
-     (price treated as VAT-inclusive → 500 / 1.15)
    - `/api/invoices` inserts a row and redirects to `/invoices/:id`
    - Subtotal `434.78`, VAT `65.22`, total `500.00`
 5. Scan the on-screen QR with a ZATCA-compatible scanner — it should decode
    to the 5 TLV tags above.
 6. Click **تحميل / طباعة PDF** to print to PDF.
 
-### 3. Voice input
-
-On `/new`, click the 🎤 button, speak the same sentence in Arabic, then stop.
-Whisper returns the transcript, which flows into the same pipeline.
-
-### 4. Free-tier gate
+### 3. Free-tier gate
 
 Create 20 invoices. The 21st attempt returns HTTP 402 and the dashboard
-banner "انتهت باقتك المجانية".
+shows the banner "انتهت باقتك المجانية".
 
 ## Project layout
 
 ```
 app/
 ├── page.tsx                 # Landing
+├── demo/page.tsx            # Public no-auth demo
 ├── login/page.tsx           # Magic-link login
 ├── auth/callback/route.ts   # Supabase OAuth callback
 ├── dashboard/page.tsx       # Invoice list
-├── new/page.tsx             # Text + voice input
+├── new/page.tsx             # Manual invoice form
 ├── settings/page.tsx        # Business profile
 ├── invoices/[id]/           # Print-friendly invoice view
 └── api/
-    ├── parse/route.ts       # Claude parser
-    ├── transcribe/route.ts  # Whisper proxy
     ├── invoices/route.ts    # Create / list invoices
     └── auth/signout/route.ts
 lib/
-├── supabase/                # client, server, middleware helpers
+├── supabase/                # client, server, proxy helpers
 ├── zatca/
 │   ├── tlv.ts               # 5-tag TLV encoder → Base64
 │   ├── tlv.test.ts          # Unit tests (ZATCA reference vector)
 │   ├── qr.ts                # TLV → QR PNG dataURL
 │   └── validate.ts          # zod schemas + total computation
-├── anthropic.ts             # Claude parser (prompt caching + tool use)
-├── whisper.ts               # Whisper client
 └── usage.ts                 # Free-tier counter
 supabase/migrations/0001_init.sql
 ```
@@ -148,9 +135,6 @@ payload follows the 5-tag TLV specification from
   per-merchant ZATCA onboarding.
 - Payment collection for the $15/month tier (currently gated by a simple
   counter only — the "Subscribe" CTA is inert).
-- WhatsApp ingress — the marketing copy mentions WhatsApp; for the MVP,
-  text/voice input lives in the web app only. A Twilio WhatsApp webhook can
-  be added later by reusing `/api/parse` and `/api/invoices`.
 - Server-side PDF file generation + Supabase Storage upload (the MVP uses
   `window.print()` for native Arabic shaping — the browser handles RTL and
   glyph shaping perfectly without needing HarfBuzz on the server).

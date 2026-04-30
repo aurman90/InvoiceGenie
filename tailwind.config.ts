@@ -9,7 +9,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        arabic: ["'Noto Naskh Arabic'", "'Amiri'", "serif"],
+        arabic: ["'Tajawal'", "sans-serif"],
       },
       colors: {
         brand: {
