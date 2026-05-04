@@ -173,8 +173,10 @@ export function InvoiceLayout({
             </div>
           </div>
           <div className="text-left relative z-10" dir="ltr">
-            <div className="text-[10px] uppercase text-white/60 font-bold tracking-wider mb-1">Homais Co. LTD</div>
-            <div className="text-sm font-semibold opacity-90">شركة هميس للنقل والخدمات اللوجستية </div>
+            <div className="text-[10px] uppercase text-white/60 font-bold tracking-wider mb-1">
+              Tax Invoice
+            </div>
+            <div className="text-sm font-semibold opacity-90">فاتورة ضريبية</div>
             <div className="mt-2 font-mono text-xl font-bold bg-white/10 px-3 py-1 rounded inline-block">{invoice.number}</div>
           </div>
         </div>

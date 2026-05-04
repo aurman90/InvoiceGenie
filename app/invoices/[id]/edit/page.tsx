@@ -23,7 +23,9 @@ export default async function EditInvoicePage({ params }: Props) {
 
   const { data: invoice } = await supabase
     .from("invoices")
-    .select("id, invoice_number, customer_id, line_items, due_date")
+    .select(
+      "id, invoice_number, customer_id, line_items, due_date, notes_override, hide_notes",
+    )
     .eq("id", id)
     .maybeSingle();
   if (!invoice) notFound();
@@ -69,6 +71,13 @@ export default async function EditInvoicePage({ params }: Props) {
             customer_id: invoice.customer_id ?? "",
             line_items: initialItems,
             due_month: dueMonth,
+            notes_mode: invoice.hide_notes
+              ? "hidden"
+              : invoice.notes_override !== null &&
+                  invoice.notes_override !== undefined
+                ? "custom"
+                : "default",
+            notes_text: invoice.notes_override ?? "",
           }}
         />
       </div>

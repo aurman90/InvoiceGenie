@@ -18,6 +18,8 @@ const createBodySchema = z.object({
     .nullable(),
   source: z.enum(["text", "voice"]).default("text"),
   doc_type: z.enum(["invoice", "quotation"]).default("invoice"),
+  notes_override: z.string().max(500).nullable().optional(),
+  hide_notes: z.boolean().optional(),
 });
 
 export async function GET() {
@@ -143,6 +145,8 @@ export async function POST(request: Request) {
       source: body.source,
       doc_type: body.doc_type,
       status: "unpaid",
+      notes_override: body.notes_override ?? null,
+      hide_notes: body.hide_notes ?? false,
     })
     .select()
     .single();

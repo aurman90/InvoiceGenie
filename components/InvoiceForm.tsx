@@ -23,12 +23,17 @@ function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
+export type NotesMode = "default" | "custom" | "hidden";
+
 export interface InvoiceFormInitial {
   customer_id: string;
   line_items: InvoiceFormLineItem[];
   /** "YYYY-MM" — the month portion of the stored due_date, or empty. */
   due_month: string;
   doc_type?: "invoice" | "quotation";
+  /** "default" inherits business notes, "custom" uses notes_text, "hidden" shows nothing. */
+  notes_mode?: NotesMode;
+  notes_text?: string;
 }
 
 export const EMPTY_INVOICE_FORM: InvoiceFormInitial = {
@@ -38,6 +43,8 @@ export const EMPTY_INVOICE_FORM: InvoiceFormInitial = {
   ],
   due_month: "",
   doc_type: "invoice",
+  notes_mode: "default",
+  notes_text: "",
 };
 
 interface Props {
@@ -62,6 +69,11 @@ export function InvoiceForm({ mode, invoiceId, initial }: Props) {
     initial?.doc_type ?? "invoice"
   );
   const [dueMonth, setDueMonth] = useState<string>(initial?.due_month ?? "");
+  const [notesMode, setNotesMode] = useState<NotesMode>(
+    initial?.notes_mode ?? "default",
+  );
+  const [notesText, setNotesText] = useState<string>(initial?.notes_text ?? "");
+  const [businessNotes, setBusinessNotes] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,10 +103,25 @@ export function InvoiceForm({ mode, invoiceId, initial }: Props) {
       })
       .catch(() => {});
 
+    fetch("/api/businesses")
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const def = data.business?.invoice_notes ?? "";
+        setBusinessNotes(def);
+        // Seed the custom textarea with the business default the first time
+        // the user switches to "custom" — but only when they haven't typed
+        // anything yet (i.e., create mode with no override loaded).
+        if (mode === "create" && !initial?.notes_text) {
+          setNotesText(def);
+        }
+      })
+      .catch(() => {});
+
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [mode, initial?.notes_text]);
 
   const subtotal = items.reduce((s, it) => s + it.qty * it.unit_price, 0);
   const vatAmount = items.reduce(
@@ -193,6 +220,9 @@ export function InvoiceForm({ mode, invoiceId, initial }: Props) {
           })),
           doc_type: docType,
           source: "text",
+          notes_override:
+            notesMode === "custom" ? notesText : null,
+          hide_notes: notesMode === "hidden",
         }),
       });
       if (!res.ok) {
@@ -459,6 +489,104 @@ export function InvoiceForm({ mode, invoiceId, initial }: Props) {
           >
             + إدراج مسار 🚚
           </button>
+        </div>
+      </div>
+
+      {/* Notes */}
+      <div className="space-y-3">
+        <h2 className="font-bold">ملاحظات الفاتورة</h2>
+        <p className="text-xs text-gray-500">
+          تظهر في أسفل الفاتورة. يمكنك استخدام النص الافتراضي من إعدادات
+          المنشأة، أو كتابة ملاحظات خاصة بهذه الفاتورة، أو إخفائها كلياً.
+        </p>
+
+        <div className="space-y-2">
+          <label
+            className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-all ${
+              notesMode === "default"
+                ? "border-brand bg-brand/5 ring-1 ring-brand"
+                : "border-slate-100 hover:bg-slate-50"
+            }`}
+          >
+            <input
+              type="radio"
+              checked={notesMode === "default"}
+              onChange={() => setNotesMode("default")}
+              disabled={saving}
+              className="mt-1"
+            />
+            <div className="flex-1">
+              <div className="text-sm font-semibold">
+                استخدام الملاحظات الافتراضية
+              </div>
+              <div className="mt-1 whitespace-pre-wrap text-xs text-gray-500">
+                {businessNotes
+                  ? businessNotes
+                  : "(لا توجد ملاحظات افتراضية في إعدادات المنشأة)"}
+              </div>
+            </div>
+          </label>
+
+          <label
+            className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-all ${
+              notesMode === "custom"
+                ? "border-brand bg-brand/5 ring-1 ring-brand"
+                : "border-slate-100 hover:bg-slate-50"
+            }`}
+          >
+            <input
+              type="radio"
+              checked={notesMode === "custom"}
+              onChange={() => setNotesMode("custom")}
+              disabled={saving}
+              className="mt-1"
+            />
+            <div className="flex-1">
+              <div className="text-sm font-semibold">
+                ملاحظات مخصصة لهذه الفاتورة
+              </div>
+              {notesMode === "custom" && (
+                <>
+                  <textarea
+                    value={notesText}
+                    onChange={(e) => setNotesText(e.target.value)}
+                    disabled={saving}
+                    rows={3}
+                    maxLength={500}
+                    placeholder="مثال: نقل بدائل اسمنت — مسار الرياض / الدمام"
+                    className="mt-2 w-full px-3 py-2 rounded-xl bg-white border border-slate-200 focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all outline-none text-sm"
+                  />
+                  <div className="mt-1 text-[11px] text-gray-400 text-left">
+                    {notesText.length} / 500
+                  </div>
+                </>
+              )}
+            </div>
+          </label>
+
+          <label
+            className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-all ${
+              notesMode === "hidden"
+                ? "border-brand bg-brand/5 ring-1 ring-brand"
+                : "border-slate-100 hover:bg-slate-50"
+            }`}
+          >
+            <input
+              type="radio"
+              checked={notesMode === "hidden"}
+              onChange={() => setNotesMode("hidden")}
+              disabled={saving}
+              className="mt-1"
+            />
+            <div className="flex-1">
+              <div className="text-sm font-semibold">
+                إخفاء الملاحظات في هذه الفاتورة
+              </div>
+              <div className="mt-1 text-xs text-gray-500">
+                لن يظهر أي نص في تذييل الفاتورة.
+              </div>
+            </div>
+          </label>
         </div>
       </div>
 

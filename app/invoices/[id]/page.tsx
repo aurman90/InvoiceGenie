@@ -47,7 +47,11 @@ export default async function InvoiceDetailPage({ params }: Props) {
   const items = invoice.line_items as LineItem[];
   const template = (business.invoice_template ?? "classic") as InvoiceTemplate;
   const brandColor = business.brand_color ?? "#0f766e";
-  const notes = business.invoice_notes ?? null;
+  const notes = invoice.hide_notes
+    ? null
+    : invoice.notes_override !== null && invoice.notes_override !== undefined
+      ? invoice.notes_override
+      : (business.invoice_notes ?? null);
   const stampUrl = business.stamp_url ?? null;
   
   // Merge business defaults with invoice-specific overrides

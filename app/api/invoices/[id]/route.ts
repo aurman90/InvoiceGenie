@@ -16,6 +16,8 @@ const updateBodySchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .nullable(),
+  notes_override: z.string().max(500).nullable().optional(),
+  hide_notes: z.boolean().optional(),
 });
 
 export async function GET(_request: Request, { params }: Ctx) {
@@ -136,6 +138,10 @@ export async function PATCH(request: Request, { params }: Ctx) {
       total: totals.total,
       line_items: body.line_items,
       qr_base64: qrBase64,
+      ...(body.notes_override !== undefined
+        ? { notes_override: body.notes_override }
+        : {}),
+      ...(body.hide_notes !== undefined ? { hide_notes: body.hide_notes } : {}),
     })
     .eq("id", id)
     .select()
