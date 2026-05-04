@@ -44,12 +44,17 @@ export interface InvoiceLayoutProps {
     vat_amount: number;
     total: number;
     line_items: InvoiceLayoutLineItem[];
+    doc_type?: "invoice" | "quotation" | null;
+    status?: string | null;
   };
   /** PNG data URL of the QR code. */
   qrDataUrl: string;
   brandColor: string;
   template: InvoiceTemplate;
   notes?: string | null;
+  /** Optional studio overrides — currently accepted but not yet rendered. */
+  invoiceSettings?: unknown;
+  stampUrl?: string | null;
   /**
    * Rendering mode.
    *  - "page": absolute A4 dimensions with auto-fit scaling — used for
