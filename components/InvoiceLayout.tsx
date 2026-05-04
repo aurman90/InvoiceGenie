@@ -85,7 +85,6 @@ export function InvoiceLayout({
   brandColor,
   template,
   notes,
-  stampUrl,
   mode = "page",
 }: InvoiceLayoutProps) {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -256,28 +255,7 @@ export function InvoiceLayout({
   };
 
   const Parties = () => (
-    <div className="my-8 grid grid-cols-2 gap-6">
-      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 break-words">
-        <h2 className="text-[10px] font-bold text-slate-400 mb-3 uppercase tracking-wider flex items-center justify-between">
-          <span>من (المورّد)</span>
-          <span dir="ltr">From (Seller)</span>
-        </h2>
-        <p className="text-xl font-extrabold text-slate-800 leading-tight mb-1">{seller.name_ar}</p>
-        {seller.name_en && (
-          <p className="text-sm text-slate-500 font-medium mb-3" dir="ltr">
-            {seller.name_en}
-          </p>
-        )}
-        <div className="space-y-1.5 mt-4 pt-4 border-t border-slate-200/60">
-          <p className="text-xs text-slate-600 font-medium flex justify-between">
-            <span>الرقم الضريبي:</span>
-            <span dir="ltr" className="font-mono text-slate-800">{seller.vat_number}</span>
-          </p>
-          {seller.address_ar && (
-            <p className="text-xs text-slate-500 leading-relaxed mt-2">{seller.address_ar}</p>
-          )}
-        </div>
-      </div>
+    <div className="my-8">
       <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 break-words">
         <h2 className="text-[10px] font-bold text-slate-400 mb-3 uppercase tracking-wider flex items-center justify-between">
           <span>إلى (العميل)</span>
@@ -285,14 +263,14 @@ export function InvoiceLayout({
         </h2>
         <p className="text-xl font-extrabold text-slate-800 leading-tight mb-1">{customer.name}</p>
 
-        <div className="space-y-1.5 mt-5 pt-4 border-t border-slate-200/60">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-2 mt-5 pt-4 border-t border-slate-200/60">
           {customer.vat_number ? (
-            <p className="text-xs text-slate-600 font-medium flex justify-between mb-2">
+            <p className="text-xs text-slate-600 font-medium flex justify-between">
               <span>الرقم الضريبي:</span>
               <span dir="ltr" className="font-mono text-slate-800">{customer.vat_number}</span>
             </p>
           ) : (
-            <p className="text-xs text-slate-400 italic mb-2">لا يوجد رقم ضريبي مضاف</p>
+            <p className="text-xs text-slate-400 italic">لا يوجد رقم ضريبي مضاف</p>
           )}
           <p className="text-xs text-slate-600 font-medium flex justify-between">
             <span>تاريخ الإصدار:</span>
@@ -353,27 +331,8 @@ export function InvoiceLayout({
   );
 
   const Totals = () => (
-    <div className="mt-8 grid grid-cols-2 gap-6 items-stretch">
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/40 p-4 min-h-[140px]">
-        {stampUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={stampUrl}
-            alt="ختم"
-            className="max-h-28 max-w-full object-contain"
-          />
-        ) : (
-          <div className="text-center">
-            <div className="text-xs font-semibold text-slate-400 mb-0.5">
-              الختم والتوقيع
-            </div>
-            <div className="text-[9px] text-slate-300 uppercase tracking-wider" dir="ltr">
-              Stamp & Signature
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-5 shadow-sm">
+    <div className="mt-8 flex justify-end">
+      <div className="w-[50%] space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-5 shadow-sm">
         <div className="flex justify-between text-slate-600 text-sm">
           <span>المجموع قبل الضريبة</span>
           <span className="font-mono">{fmt(invoice.subtotal)} ر.س</span>
