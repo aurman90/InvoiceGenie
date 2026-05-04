@@ -363,17 +363,24 @@ export function InvoiceLayout({
     </div>
   );
 
+  const NotesBlock = () =>
+    notes ? (
+      <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50/60 px-5 py-4">
+        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+          ملاحظات
+        </div>
+        <p className="whitespace-pre-wrap text-[12px] leading-relaxed text-slate-700">
+          {notes}
+        </p>
+      </div>
+    ) : null;
+
   const Footer = () => (
     <div
       className="mt-auto flex items-end justify-between pt-4"
       style={{ borderTop: `1px solid ${ruleColor}` }}
     >
       <div className="max-w-[55%] text-[9px] leading-relaxed text-gray-500">
-        {notes && (
-          <p className="mb-2 whitespace-pre-wrap text-[10px] text-gray-700">
-            {notes}
-          </p>
-        )}
         <p>
           تم توليد هذه الفاتورة عبر InvoiceGenie بما يتوافق مع متطلبات ZATCA
           المرحلة الأولى.
@@ -409,6 +416,7 @@ export function InvoiceLayout({
       >
         <Header />
         <Parties />
+        <NotesBlock />
         <Items />
         <Totals />
         <div style={{ flex: 1 }} />
