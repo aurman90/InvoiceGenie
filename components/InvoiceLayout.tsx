@@ -85,6 +85,7 @@ export function InvoiceLayout({
   brandColor,
   template,
   notes,
+  stampUrl,
   mode = "page",
 }: InvoiceLayoutProps) {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -152,37 +153,44 @@ export function InvoiceLayout({
     if (isModern) {
       return (
         <div
-          className="flex items-center justify-between rounded-3xl px-8 py-8 shadow-md relative overflow-hidden"
+          className="flex items-center justify-between rounded-3xl px-8 py-7 shadow-md relative overflow-hidden gap-6"
           style={{ background: `linear-gradient(135deg, ${brandColor}, #0f172a)`, color: "white" }}
         >
           <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 blur-3xl rounded-full pointer-events-none"></div>
           <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-white/5 blur-3xl rounded-full pointer-events-none"></div>
-          <div className="flex items-center gap-5 relative z-10">
+          <div className="flex items-center gap-5 relative z-10 min-w-0">
             {seller.logo_url && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={seller.logo_url}
                 alt="logo"
-                className="h-16 w-16 rounded-xl bg-white object-contain p-1.5 shadow-sm"
+                className="h-16 w-16 rounded-xl bg-white object-contain p-1.5 shadow-sm shrink-0"
               />
             )}
-            <div>
-              <div className="text-[24px] font-extrabold leading-tight">
+            <div className="min-w-0">
+              <div className="text-[22px] font-extrabold leading-tight">
                 {seller.name_ar}
               </div>
               {seller.name_en && (
-                <div className="text-sm text-white/80 font-medium mt-1" dir="ltr">
+                <div className="text-sm text-white/70 font-medium mt-1" dir="ltr">
                   {seller.name_en}
                 </div>
               )}
             </div>
           </div>
-          <div className="text-left relative z-10" dir="ltr">
-            <div className="text-[10px] uppercase text-white/60 font-bold tracking-wider mb-1">
-              Tax Invoice
-            </div>
+          <div className="text-left relative z-10 shrink-0" dir="ltr">
             <div className="text-sm font-semibold opacity-90">فاتورة ضريبية</div>
-            <div className="mt-2 font-mono text-xl font-bold bg-white/10 px-3 py-1 rounded inline-block">{invoice.number}</div>
+            <div className="mt-2 font-mono text-lg font-bold bg-white/10 px-3 py-1 rounded inline-block whitespace-nowrap">
+              {invoice.number}
+            </div>
+            {invoice.uuid && (
+              <div
+                className="mt-1.5 font-mono text-[8px] text-white/50 break-all leading-tight max-w-[180px]"
+                dir="ltr"
+              >
+                {invoice.uuid}
+              </div>
+            )}
           </div>
         </div>
       );
@@ -316,23 +324,26 @@ export function InvoiceLayout({
               background: isModern ? brandColor : "#f8fafc",
             }}
           >
-            <th className="py-4 px-6">#</th>
-            <th className="py-4 px-2">الوصف</th>
-            <th className="py-4 px-2">الكمية</th>
-            <th className="py-4 px-2">السعر</th>
-            <th className="py-4 px-6 text-left">الإجمالي</th>
+            <th className="py-3.5 px-5">الوصف</th>
+            <th className="py-3.5 px-2 text-center">الكمية</th>
+            <th className="py-3.5 px-2 text-center">السعر</th>
+            <th className="py-3.5 px-2 text-center">الضريبة (١٥٪)</th>
+            <th className="py-3.5 px-5 text-left">الإجمالي</th>
           </tr>
         </thead>
         <tbody className="text-sm divide-y divide-slate-100">
           {invoice.line_items.map((li, i) => {
-            const line = li.qty * li.unit_price;
+            const subtotal = li.qty * li.unit_price;
+            const vatRate = li.vat_rate ?? 0.15;
+            const tax = subtotal * vatRate;
+            const total = subtotal + tax;
             return (
               <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                <td className="py-5 px-6 font-medium text-slate-400">{i + 1}</td>
-                <td className="py-5 px-2 font-bold text-slate-800">{li.description}</td>
-                <td className="py-5 px-2 text-slate-600 font-mono">{li.qty}</td>
-                <td className="py-5 px-2 text-slate-600 font-mono">{fmt(li.unit_price)}</td>
-                <td className="py-5 px-6 font-bold text-slate-800 font-mono text-left">{fmt(line)}</td>
+                <td className="py-4 px-5 font-bold text-slate-800">{li.description}</td>
+                <td className="py-4 px-2 text-slate-600 font-mono text-center">{li.qty}</td>
+                <td className="py-4 px-2 text-slate-600 font-mono text-center">{fmt(li.unit_price)}</td>
+                <td className="py-4 px-2 text-slate-600 font-mono text-center">{fmt(tax)}</td>
+                <td className="py-4 px-5 font-bold text-slate-800 font-mono text-left">{fmt(total)}</td>
               </tr>
             );
           })}
@@ -342,19 +353,38 @@ export function InvoiceLayout({
   );
 
   const Totals = () => (
-    <div className="mt-8 flex justify-end">
-      <div className="w-[50%] space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-sm">
-        <div className="flex justify-between text-slate-600 font-medium text-sm">
+    <div className="mt-8 grid grid-cols-2 gap-6 items-stretch">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/40 p-4 min-h-[140px]">
+        {stampUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={stampUrl}
+            alt="ختم"
+            className="max-h-28 max-w-full object-contain"
+          />
+        ) : (
+          <div className="text-center">
+            <div className="text-xs font-semibold text-slate-400 mb-0.5">
+              الختم والتوقيع
+            </div>
+            <div className="text-[9px] text-slate-300 uppercase tracking-wider" dir="ltr">
+              Stamp & Signature
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-5 shadow-sm">
+        <div className="flex justify-between text-slate-600 text-sm">
           <span>المجموع قبل الضريبة</span>
           <span className="font-mono">{fmt(invoice.subtotal)} ر.س</span>
         </div>
-        <div className="flex justify-between text-slate-600 font-medium text-sm">
+        <div className="flex justify-between text-slate-600 text-sm">
           <span>ضريبة القيمة المضافة ١٥٪</span>
           <span className="font-mono">{fmt(invoice.vat_amount)} ر.س</span>
         </div>
         <div
-          className="mt-2 flex justify-between pt-5 text-xl font-extrabold"
-          style={{ borderTop: `2px dashed #cbd5e1`, color: brandColor }}
+          className="flex justify-between pt-3 text-base font-bold border-t border-slate-200"
+          style={{ color: brandColor }}
         >
           <span>الإجمالي</span>
           <span className="font-mono">{fmt(invoice.total)} ر.س</span>
@@ -392,10 +422,10 @@ export function InvoiceLayout({
           src={qrDataUrl}
           alt="ZATCA QR"
           style={{
-            width: 110,
-            height: 110,
+            width: 80,
+            height: 80,
             border: `1px solid ${ruleColor}`,
-            borderRadius: 6,
+            borderRadius: 4,
           }}
         />
       )}
