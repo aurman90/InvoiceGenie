@@ -3,15 +3,12 @@
  * and the /invoices/[id] detail page. Pure component, no data fetching.
  *
  * Supports three templates (classic, modern, minimal) and a brand color
- * that tints headings, rule lines, and totals. The entire card is sized
- * to A4 (210×297mm) so what the user sees on screen matches what prints.
- *
- * Auto-fit: if the content is taller than the usable A4 area, the card
- * scales down (via CSS transform) so it still occupies exactly one page.
+ * that tints headings, rule lines, and totals. The page is laid out as
+ * an A4 width (210mm) with a 297mm minimum height; tall invoices grow
+ * past one page and let the browser's print engine break across pages
+ * (see globals.css @media print rules).
  */
 "use client";
-
-import { useEffect, useRef, useState } from "react";
 
 export type InvoiceTemplate = "classic" | "modern" | "minimal";
 
@@ -89,35 +86,6 @@ export function InvoiceLayout({
   notes,
   mode = "page",
 }: InvoiceLayoutProps) {
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-
-  // Auto-shrink content so the whole invoice stays on one A4 page.
-  useEffect(() => {
-    if (mode !== "page") return;
-    const el = contentRef.current;
-    if (!el) return;
-
-    const measure = () => {
-      // Reset scale before measuring natural height
-      el.style.transform = "scale(1)";
-      const naturalHeight = el.scrollHeight;
-      const usableMm = A4_HEIGHT_MM - PAGE_PADDING_MM * 2;
-      const usablePx = (usableMm / 25.4) * 96; // mm → px at 96dpi
-      if (naturalHeight > usablePx) {
-        const s = Math.max(0.5, usablePx / naturalHeight);
-        setScale(s);
-      } else {
-        setScale(1);
-      }
-    };
-
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [mode, template, notes, invoice.line_items.length]);
-
   // ---------- style helpers ----------
   const isModern = template === "modern";
   const isMinimal = template === "minimal";
@@ -127,12 +95,11 @@ export function InvoiceLayout({
     mode === "page"
       ? {
         width: `${A4_WIDTH_MM}mm`,
-        height: `${A4_HEIGHT_MM}mm`,
+        minHeight: `${A4_HEIGHT_MM}mm`,
         padding: `${PAGE_PADDING_MM}mm`,
         background: "white",
         color: "#111827",
         boxSizing: "border-box",
-        overflow: "hidden",
         position: "relative",
       }
       : {
@@ -412,13 +379,10 @@ export function InvoiceLayout({
   return (
     <div style={pageStyle} className="invoice-page">
       <div
-        ref={contentRef}
         style={{
           display: "flex",
           flexDirection: "column",
-          height: "100%",
-          transform: mode === "page" ? `scale(${scale})` : undefined,
-          transformOrigin: "top right",
+          minHeight: mode === "page" ? "100%" : undefined,
         }}
       >
         <Header />

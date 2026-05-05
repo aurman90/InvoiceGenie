@@ -103,8 +103,8 @@ export default async function InvoiceDetailPage({ params }: Props) {
           />
         </div>
         <div
-          className="shadow-sm border border-slate-100 rounded-lg overflow-hidden bg-white"
-          style={{ width: "210mm", height: "297mm" }}
+          className="shadow-sm border border-slate-100 rounded-lg bg-white"
+          style={{ width: "210mm", minHeight: "297mm" }}
         >
           <InvoiceLayout
             mode="page"
