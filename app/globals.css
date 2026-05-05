@@ -31,12 +31,12 @@ body {
   display: none;
 }
 
-/* A4 page layout — invoices grow vertically as items are added; the
-   browser's print engine handles the page breaks. */
+/* A4 page layout — content auto-shrinks via the InvoiceLayout component
+   when its intrinsic height exceeds the usable area. */
 @media print {
   @page {
     size: A4;
-    margin: 14mm;
+    margin: 0;
   }
   html,
   body {
@@ -54,17 +54,7 @@ body {
     box-shadow: none !important;
     border: 0 !important;
     margin: 0 !important;
-    padding: 0 !important;
-    width: auto !important;
-    min-height: 0 !important;
-  }
-  /* Repeat table headers on each printed page and avoid splitting a row
-     across a page break. */
-  .invoice-page thead {
-    display: table-header-group;
-  }
-  .invoice-page tr {
+    page-break-after: avoid;
     page-break-inside: avoid;
-    break-inside: avoid;
   }
 }
