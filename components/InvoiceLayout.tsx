@@ -33,6 +33,8 @@ export interface InvoiceLayoutProps {
   customer: {
     name: string;
     vat_number?: string | null;
+    address?: string | null;
+    email?: string | null;
   };
   invoice: {
     number: string;
@@ -278,11 +280,27 @@ export function InvoiceLayout({
               {new Date(invoice.issue_date).toLocaleDateString("en-GB")}
             </span>
           </p>
+          {customer.address && (
+            <p className="text-xs text-slate-600 font-medium flex justify-between">
+              <span>العنوان:</span>
+              <span className="text-slate-800 truncate ml-2" title={customer.address}>
+                {customer.address}
+              </span>
+            </p>
+          )}
           {invoice.due_date && (
             <p className="text-xs text-slate-600 font-medium flex justify-between">
               <span>تاريخ الاستحقاق:</span>
               <span className="text-slate-800 font-mono" dir="ltr">
                 {new Date(invoice.due_date).toLocaleDateString("en-GB")}
+              </span>
+            </p>
+          )}
+          {customer.email && (
+            <p className="text-xs text-slate-600 font-medium flex justify-between col-span-2">
+              <span>الإيميل:</span>
+              <span dir="ltr" className="text-slate-800 font-mono truncate ml-2" title={customer.email}>
+                {customer.email}
               </span>
             </p>
           )}

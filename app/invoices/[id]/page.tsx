@@ -38,6 +38,16 @@ export default async function InvoiceDetailPage({ params }: Props) {
     .maybeSingle();
   if (!business) notFound();
 
+  // Fetch the customer for address/email — falls back to denormalized
+  // name/VAT on the invoice if the customer was deleted later.
+  const { data: customer } = invoice.customer_id
+    ? await supabase
+        .from("customers")
+        .select("address, email")
+        .eq("id", invoice.customer_id)
+        .maybeSingle()
+    : { data: null };
+
   const qrDataUrl = await QRCode.toDataURL(invoice.qr_base64, {
     errorCorrectionLevel: "M",
     margin: 1,
@@ -111,6 +121,8 @@ export default async function InvoiceDetailPage({ params }: Props) {
             customer={{
               name: invoice.customer_name,
               vat_number: invoice.customer_vat,
+              address: customer?.address ?? null,
+              email: customer?.email ?? null,
             }}
             invoice={{
               doc_type: invoice.doc_type,
