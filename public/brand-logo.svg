@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
+  <rect width="200" height="200" fill="#1E4A9E"/>
+  <g fill="#E89441" fill-rule="evenodd">
+    <!-- Outer horseshoe: large rounded shape, open at the bottom -->
+    <path d="M 57.5 173.6
+             A 85 85 0 1 1 142.5 173.6
+             L 132.5 156.3
+             A 65 65 0 1 0 67.5 156.3
+             Z"/>
+    <!-- Middle horseshoe: same shape, smaller, also open at the bottom -->
+    <path d="M 80 139.7
+             A 50 50 0 1 1 120 139.7
+             L 112 123.4
+             A 30 30 0 1 0 88 123.4
+             Z"/>
+  </g>
+  <!-- Center solid dot -->
+  <circle cx="100" cy="95" r="12" fill="#E89441"/>
+</svg>
