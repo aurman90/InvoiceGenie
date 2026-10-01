@@ -1,7 +1,7 @@
 import { createClient } from "./supabase/server";
 
 export const FREE_INVOICE_LIMIT = Number(
-  process.env.FREE_INVOICE_LIMIT ?? 20,
+  process.env.FREE_INVOICE_LIMIT ?? 30,
 );
 
 export interface UsageStatus {

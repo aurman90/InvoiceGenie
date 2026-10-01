@@ -114,7 +114,7 @@ export default async function DashboardPage() {
 
         {usage.overLimit && (
           <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-900">
-            انتهت باقتك المجانية (٢٠ فاتورة). يرجى الاشتراك للمتابعة.
+            انتهت باقتك المجانية (٣٠ فاتورة). يرجى الاشتراك للمتابعة.
           </div>
         )}
 

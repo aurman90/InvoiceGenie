@@ -93,7 +93,7 @@ asserts:
 
 ### 3. Free-tier gate
 
-Create 20 invoices. The 21st attempt returns HTTP 402 and the dashboard
+Create 30 invoices. The 31st attempt returns HTTP 402 and the dashboard
 shows the banner "انتهت باقتك المجانية".
 
 ## Project layout

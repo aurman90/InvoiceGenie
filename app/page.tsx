@@ -44,7 +44,7 @@ export default function LandingPage() {
           </Link>
         </div>
         <p className="mt-6 text-sm text-slate-500 font-medium opacity-80">
-          ٢٠ فاتورة مجاناً، ثم ١٥$ شهرياً
+          ٣٠ فاتورة مجاناً، ثم ١٥$ شهرياً
         </p>
       </section>
 
